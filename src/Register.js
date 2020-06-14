@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -9,8 +9,6 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import Firebase from "firebase";
-import {firebaseConfig} from "./App"
 
 const styles = theme => ({
   paper: {
@@ -36,16 +34,26 @@ const INITIAL_STATE = {
   firstName: '',
   lastName: '',
   email: '',
-  passwordOne: '',
+  password: '',
   passwordTwo: '',
-  error: null,
+  isAdmin: false
 };
 
 class Register extends Component {
   constructor(props) {
     super(props);
-    Firebase.initializeApp(firebaseConfig);
-    this.state = {...INITIAL_STATE};
+    this.state = {
+      users: [],
+      ...INITIAL_STATE
+    };
+  }
+
+  componentDidMount() {
+    const users = JSON.parse(localStorage["users"]);
+
+    this.setState({
+      users
+    });
   }
 
   onChange = event => {
@@ -53,30 +61,32 @@ class Register extends Component {
   };
 
   onSubmit = event => {
-    const { firstName, lastName, email, passwordOne } = this.state;
+    const { firstName, lastName, email, password, isAdmin } = this.state;
+    const id = '_' + Math.random().toString(36).substr(2, 9);
+    const newUser = { id, firstName, lastName, email, password, isAdmin };
+    const users = [ newUser, ...this.state.users ];
 
-    Firebase.database()
-      .ref("/users")
-      .set({firstName, lastName, email, passwordOne});
+    localStorage["users"] = JSON.stringify(users);
+    localStorage["currentUser"] = JSON.stringify(newUser);
+    window.location.href = "/tasks-list";
  
     event.preventDefault();
   };
 
   render() {
-    const {classes} = this.props;
+    const { classes } = this.props;
 
     const {
       firstName,
       lastName,
       email,
-      passwordOne,
-      passwordTwo,
-      error,
+      password,
+      passwordTwo
     } = this.state;
 
     const isInvalid =
-      passwordOne !== passwordTwo ||
-      passwordOne === '' ||
+      password !== passwordTwo ||
+      password === '' ||
       email === '' ||
       firstName === '' ||
       lastName === '';
@@ -138,11 +148,11 @@ class Register extends Component {
                   variant="outlined"
                   required
                   fullWidth
-                  name="passwordOne"
+                  name="password"
                   label="Password"
                   type="password"
                   id="password"
-                  value={passwordOne}
+                  value={password}
                   onChange={this.onChange}
                   autoComplete="current-password"
                 />

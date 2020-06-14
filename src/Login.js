@@ -3,8 +3,6 @@ import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
 import Grid from '@material-ui/core/Grid';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -24,7 +22,7 @@ const styles = (theme) => ({
     backgroundColor: theme.palette.secondary.main,
   },
   form: {
-    width: '100%', // Fix IE 11 issue.
+    width: '100%',
     marginTop: theme.spacing(1),
   },
   submit: {
@@ -32,9 +30,42 @@ const styles = (theme) => ({
   },
 });
 
+const INITIAL_STATE = {
+  email: '',
+  password: '',
+};
+
 class Login extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {...INITIAL_STATE};
+  }
+
+  onChange = event => {
+    this.setState({ [event.target.name]: event.target.value });
+  };
+
+  onSubmit = event => {
+	const { email, password } = this.state;
+	const currentUser = JSON.parse(localStorage["users"]).find(user => {
+		return user.email === email && user.password === password
+	});
+
+	localStorage["currentUser"] = JSON.stringify(currentUser);
+
+	if (currentUser.isAdmin) {
+		window.location.href = "/users-list";
+	} else {
+		window.location.href = "/tasks-list";
+	}
+ 
+    event.preventDefault();
+  };
+
   render() {
     const { classes } = this.props;
+
+    const { email, password } = this.state;
 
     return (
       <Container component="main" maxWidth="xs">
@@ -46,7 +77,7 @@ class Login extends React.Component {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={classes.form} noValidate>
+          <form className={classes.form} onSubmit={this.onSubmit} noValidate>
             <TextField
               variant="outlined"
               margin="normal"
@@ -56,6 +87,8 @@ class Login extends React.Component {
               label="Email Address"
               name="email"
               autoComplete="email"
+              value = {email}
+              onChange={this.onChange}
               autoFocus
             />
             <TextField
@@ -67,11 +100,9 @@ class Login extends React.Component {
               label="Password"
               type="password"
               id="password"
+              value = {password}
+              onChange={this.onChange}
               autoComplete="current-password"
-            />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
             />
             <Button
               type="submit"
